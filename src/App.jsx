@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { supabase } from "./supabase";
 
 const cats = ["Dream", "Wish", "Goal", "Thought"];
@@ -1517,6 +1518,8 @@ function Shell({
       </nav>
 
       {children}
+
+      <Analytics />
     </div>
   );
 }
