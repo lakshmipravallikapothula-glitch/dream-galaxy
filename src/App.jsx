@@ -13,9 +13,9 @@ const ico = {
 
 const DAILY_LIMIT = 3;
 
-// --------------------------------------------------
-// GET TODAY IN THE USER'S LOCAL DATE
-// --------------------------------------------------
+// ==================================================
+// GET TODAY IN USER'S LOCAL DATE
+// ==================================================
 
 function getLocalDate() {
   const now = new Date();
@@ -27,9 +27,9 @@ function getLocalDate() {
   return `${year}-${month}-${day}`;
 }
 
-// --------------------------------------------------
-// CREATE A STABLE STAR POSITION FROM ITS ID
-// --------------------------------------------------
+// ==================================================
+// CREATE STABLE STAR POSITION FROM ID
+// ==================================================
 
 function getStarPosition(id) {
   let hash = 0;
@@ -50,9 +50,9 @@ function getStarPosition(id) {
   };
 }
 
-// --------------------------------------------------
+// ==================================================
 // MAIN APP
-// --------------------------------------------------
+// ==================================================
 
 function App() {
   const [page, setPage] = useState("landing");
@@ -83,9 +83,9 @@ function App() {
 
   const [todayCount, setTodayCount] = useState(0);
 
-  // --------------------------------------------------
+  // ==================================================
   // AUTH SESSION
-  // --------------------------------------------------
+  // ==================================================
 
   useEffect(() => {
     let mounted = true;
@@ -134,9 +134,9 @@ function App() {
     };
   }, []);
 
-  // --------------------------------------------------
+  // ==================================================
   // LOAD STARS
-  // --------------------------------------------------
+  // ==================================================
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -174,9 +174,9 @@ function App() {
     calculateTodayCount(loadedStars);
   }
 
-  // --------------------------------------------------
+  // ==================================================
   // COUNT TODAY'S STARS
-  // --------------------------------------------------
+  // ==================================================
 
   function calculateTodayCount(list) {
     const today = getLocalDate();
@@ -185,9 +185,11 @@ function App() {
       const date = new Date(star.created_at);
 
       const year = date.getFullYear();
+
       const month = String(
         date.getMonth() + 1
       ).padStart(2, "0");
+
       const day = String(
         date.getDate()
       ).padStart(2, "0");
@@ -200,9 +202,9 @@ function App() {
     setTodayCount(count);
   }
 
-  // --------------------------------------------------
+  // ==================================================
   // AUTH NAVIGATION
-  // --------------------------------------------------
+  // ==================================================
 
   function auth(nextMode) {
     setMode(nextMode);
@@ -211,9 +213,9 @@ function App() {
     setPage("auth");
   }
 
-  // --------------------------------------------------
+  // ==================================================
   // SIGN UP / SIGN IN
-  // --------------------------------------------------
+  // ==================================================
 
   async function submitAuth(e) {
     e.preventDefault();
@@ -222,18 +224,14 @@ function App() {
     setNotice("");
 
     if (mode === "signup" && !name.trim()) {
-      return setError(
-        "Please enter your name."
-      );
+      return setError("Please enter your name.");
     }
 
     if (
       mode === "signup" &&
       password !== confirm
     ) {
-      return setError(
-        "Passwords do not match."
-      );
+      return setError("Passwords do not match.");
     }
 
     if (password.length < 6) {
@@ -288,9 +286,9 @@ function App() {
     }
   }
 
-  // --------------------------------------------------
+  // ==================================================
   // OPEN CREATE PAGE
-  // --------------------------------------------------
+  // ==================================================
 
   function openCreatePage() {
     setError("");
@@ -304,9 +302,9 @@ function App() {
     setPage("create");
   }
 
-  // --------------------------------------------------
+  // ==================================================
   // SAVE STAR
-  // --------------------------------------------------
+  // ==================================================
 
   async function saveStar(e) {
     e.preventDefault();
@@ -331,10 +329,7 @@ function App() {
     setBusy(true);
 
     try {
-      // ----------------------------------------------
       // EDIT EXISTING STAR
-      // ----------------------------------------------
-
       if (editingId) {
         const {
           error: updateError,
@@ -344,14 +339,10 @@ function App() {
             name: starName.trim(),
             message: message.trim(),
             category,
-            updated_at:
-              new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .eq("id", editingId)
-          .eq(
-            "user_id",
-            session.user.id
-          );
+          .eq("user_id", session.user.id);
 
         if (updateError) {
           throw updateError;
@@ -369,40 +360,29 @@ function App() {
         return;
       }
 
-      // ----------------------------------------------
       // DAILY LIMIT
-      // ----------------------------------------------
-
       const currentToday = getLocalDate();
 
-      const todayStars = stars.filter(
-        (star) => {
-          const date = new Date(
-            star.created_at
-          );
+      const todayStars = stars.filter((star) => {
+        const date = new Date(star.created_at);
 
-          const year =
-            date.getFullYear();
+        const year = date.getFullYear();
 
-          const month = String(
-            date.getMonth() + 1
-          ).padStart(2, "0");
+        const month = String(
+          date.getMonth() + 1
+        ).padStart(2, "0");
 
-          const day = String(
-            date.getDate()
-          ).padStart(2, "0");
+        const day = String(
+          date.getDate()
+        ).padStart(2, "0");
 
-          return (
-            `${year}-${month}-${day}` ===
-            currentToday
-          );
-        }
-      );
+        return (
+          `${year}-${month}-${day}` ===
+          currentToday
+        );
+      });
 
-      if (
-        todayStars.length >=
-        DAILY_LIMIT
-      ) {
+      if (todayStars.length >= DAILY_LIMIT) {
         setBusy(false);
 
         return setError(
@@ -410,10 +390,7 @@ function App() {
         );
       }
 
-      // ----------------------------------------------
       // CREATE NEW STAR
-      // ----------------------------------------------
-
       const {
         error: insertError,
       } = await supabase
@@ -444,9 +421,9 @@ function App() {
     }
   }
 
-  // --------------------------------------------------
+  // ==================================================
   // EDIT STAR
-  // --------------------------------------------------
+  // ==================================================
 
   function editStar(star) {
     setStarName(star.name);
@@ -463,18 +440,18 @@ function App() {
     setPage("create");
   }
 
-  // --------------------------------------------------
+  // ==================================================
   // ASK DELETE
-  // --------------------------------------------------
+  // ==================================================
 
   function askDeleteStar(id) {
     setSelectedStar(null);
     setDeleteStarId(id);
   }
 
-  // --------------------------------------------------
+  // ==================================================
   // DELETE STAR
-  // --------------------------------------------------
+  // ==================================================
 
   async function confirmDeleteStar() {
     if (!deleteStarId) return;
@@ -497,26 +474,19 @@ function App() {
         .from("stars")
         .delete()
         .eq("id", deleteStarId)
-        .eq(
-          "user_id",
-          session.user.id
-        );
+        .eq("user_id", session.user.id);
 
       if (deleteError) {
         throw deleteError;
       }
 
-      const updatedStars =
-        stars.filter(
-          (star) =>
-            star.id !== deleteStarId
-        );
+      const updatedStars = stars.filter(
+        (star) => star.id !== deleteStarId
+      );
 
       setStars(updatedStars);
 
-      calculateTodayCount(
-        updatedStars
-      );
+      calculateTodayCount(updatedStars);
 
       setDeleteStarId(null);
     } catch (err) {
@@ -526,9 +496,9 @@ function App() {
     }
   }
 
-  // --------------------------------------------------
+  // ==================================================
   // COUNTERS
-  // --------------------------------------------------
+  // ==================================================
 
   const counts = useMemo(
     () =>
@@ -544,9 +514,9 @@ function App() {
     [stars]
   );
 
-  // --------------------------------------------------
+  // ==================================================
   // FILTERED STARS
-  // --------------------------------------------------
+  // ==================================================
 
   const shown =
     filter === "All"
@@ -556,9 +526,9 @@ function App() {
             star.category === filter
         );
 
-  // --------------------------------------------------
+  // ==================================================
   // DISPLAY NAME
-  // --------------------------------------------------
+  // ==================================================
 
   const displayName =
     session?.user?.user_metadata
@@ -567,9 +537,9 @@ function App() {
       ?.split("@")[0] ||
     "Stargazer";
 
-  // --------------------------------------------------
-  // NAV
-  // --------------------------------------------------
+  // ==================================================
+  // NAVIGATION
+  // ==================================================
 
   const nav = session ? (
     <button
@@ -583,18 +553,14 @@ function App() {
   ) : (
     <div className="flex gap-2">
       <button
-        onClick={() =>
-          auth("signin")
-        }
+        onClick={() => auth("signin")}
         className="rounded-full px-4 py-2 transition hover:bg-white/10"
       >
         Sign In
       </button>
 
       <button
-        onClick={() =>
-          auth("signup")
-        }
+        onClick={() => auth("signup")}
         className="rounded-full bg-purple-600 px-4 py-2 font-semibold transition hover:bg-purple-500"
       >
         Create Account
@@ -665,9 +631,7 @@ function App() {
               />
             )}
 
-            {error && (
-              <Alert text={error} />
-            )}
+            {error && <Alert text={error} />}
 
             {notice && (
               <p className="mt-4 rounded-xl border border-green-400/20 bg-green-500/10 p-3 text-sm text-green-200">
@@ -720,15 +684,11 @@ function App() {
   // CREATE / EDIT PAGE
   // ==================================================
 
-  if (
-    page === "create" &&
-    session
-  ) {
-    const remaining =
-      Math.max(
-        0,
-        DAILY_LIMIT - todayCount
-      );
+  if (page === "create" && session) {
+    const remaining = Math.max(
+      0,
+      DAILY_LIMIT - todayCount
+    );
 
     return (
       <Shell nav={nav}>
@@ -767,16 +727,13 @@ function App() {
                 </p>
 
                 <p className="mt-1 text-white/70">
-                  {remaining} of{" "}
-                  {DAILY_LIMIT} stars
+                  {remaining} of {DAILY_LIMIT} stars
                   remaining today
                 </p>
               </div>
             )}
 
-            <form
-              onSubmit={saveStar}
-            >
+            <form onSubmit={saveStar}>
               <Field
                 label="Star name"
                 value={starName}
@@ -791,9 +748,7 @@ function App() {
                   required
                   value={message}
                   onChange={(e) =>
-                    setMessage(
-                      e.target.value
-                    )
+                    setMessage(e.target.value)
                   }
                   rows="5"
                   placeholder="Write your dream, wish, goal or thought..."
@@ -809,9 +764,7 @@ function App() {
                 {cats.map((cat) => (
                   <button
                     type="button"
-                    onClick={() =>
-                      setCategory(cat)
-                    }
+                    onClick={() => setCategory(cat)}
                     key={cat}
                     className={`rounded-xl border p-3 transition ${
                       category === cat
@@ -819,22 +772,18 @@ function App() {
                         : "border-white/10 bg-white/5 hover:bg-white/10"
                     }`}
                   >
-                    {ico[cat]}{" "}
-                    {cat}
+                    {ico[cat]} {cat}
                   </button>
                 ))}
               </div>
 
-              {error && (
-                <Alert text={error} />
-              )}
+              {error && <Alert text={error} />}
 
               <button
                 disabled={
                   busy ||
                   (!editingId &&
-                    todayCount >=
-                      DAILY_LIMIT)
+                    todayCount >= DAILY_LIMIT)
                 }
                 className="mt-6 w-full rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 py-4 font-semibold transition hover:opacity-90 disabled:opacity-50"
               >
@@ -842,8 +791,7 @@ function App() {
                   ? "Saving..."
                   : editingId
                   ? "💫 Update My Star"
-                  : todayCount >=
-                    DAILY_LIMIT
+                  : todayCount >= DAILY_LIMIT
                   ? "🌌 Come Back Tomorrow"
                   : "✨ Send to My Galaxy"}
               </button>
@@ -858,20 +806,13 @@ function App() {
   // VIEW MY GALAXY
   // ==================================================
 
-  if (
-    page === "viewGalaxy" &&
-    session
-  ) {
+  if (page === "viewGalaxy" && session) {
     return (
       <Shell nav={nav}>
         <main className="relative min-h-[calc(100vh-88px)] px-4 py-6 md:px-8">
-          {/* BACK BUTTON */}
-
           <div className="mx-auto max-w-7xl">
             <button
-              onClick={() =>
-                setPage("dashboard")
-              }
+              onClick={() => setPage("dashboard")}
               className="mb-5 text-purple-300 transition hover:text-purple-200"
             >
               ← Back to Dashboard
@@ -902,49 +843,48 @@ function App() {
                 🪐
               </div>
 
+              {/* ==================================================
+                  MOVING ASTRONAUT
+                  ================================================== */}
+
+              <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+                <div className="astronaut-float absolute text-4xl md:text-5xl">
+                  👨‍🚀
+                </div>
+              </div>
+
               {/* CATEGORY FILTERS */}
 
               <div className="absolute left-1/2 top-5 z-30 flex -translate-x-1/2 flex-wrap justify-center gap-2">
-                {["All", ...cats].map(
-                  (cat) => (
-                    <button
-                      key={cat}
-                      onClick={() =>
-                        setFilter(cat)
-                      }
-                      className={`rounded-full border px-4 py-2 text-sm backdrop-blur-md transition ${
-                        filter === cat
-                          ? "border-purple-400 bg-purple-600/80 shadow-lg shadow-purple-900/50"
-                          : "border-white/10 bg-black/30 hover:bg-purple-500/30"
-                      }`}
-                    >
-                      {cat === "All"
-                        ? "🌌 All"
-                        : `${ico[cat]} ${cat}`}
-                    </button>
-                  )
-                )}
+                {["All", ...cats].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setFilter(cat)}
+                    className={`rounded-full border px-4 py-2 text-sm backdrop-blur-md transition ${
+                      filter === cat
+                        ? "border-purple-400 bg-purple-600/80 shadow-lg shadow-purple-900/50"
+                        : "border-white/10 bg-black/30 hover:bg-purple-500/30"
+                    }`}
+                  >
+                    {cat === "All"
+                      ? "🌌 All"
+                      : `${ico[cat]} ${cat}`}
+                  </button>
+                ))}
               </div>
 
               {/* STARS */}
 
               {shown.map((star) => {
-                const position =
-                  getStarPosition(
-                    star.id
-                  );
+                const position = getStarPosition(star.id);
 
                 return (
                   <button
                     key={star.id}
                     onClick={() =>
-                      setSelectedStar(
-                        star
-                      )
+                      setSelectedStar(star)
                     }
-                    title={
-                      star.name
-                    }
+                    title={star.name}
                     className="absolute z-20 cursor-pointer transition duration-300 hover:scale-150"
                     style={{
                       left: `${position.x}%`,
@@ -955,9 +895,7 @@ function App() {
                     }}
                   >
                     <span className="animate-pulse">
-                      {ico[
-                        star.category
-                      ]}
+                      {ico[star.category]}
                     </span>
                   </button>
                 );
@@ -974,18 +912,14 @@ function App() {
 
                     <h3 className="mt-4 text-2xl font-semibold">
                       No{" "}
-                      {filter ===
-                      "All"
+                      {filter === "All"
                         ? "stars"
-                        : filter.toLowerCase() +
-                          "s"}{" "}
+                        : filter.toLowerCase() + "s"}{" "}
                       yet
                     </h3>
 
                     <p className="mt-2 text-white/50">
-                      Create a star and
-                      watch your galaxy
-                      grow.
+                      Create a star and watch your galaxy grow.
                     </p>
                   </div>
                 </div>
@@ -1015,17 +949,13 @@ function App() {
         {selectedStar && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-5 backdrop-blur-sm">
             <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-purple-400/30 bg-gradient-to-br from-[#25105c] via-[#17103b] to-[#10082c] p-7 shadow-2xl shadow-purple-900/60">
-              {/* glow */}
-
               <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-purple-500/20 blur-3xl" />
 
               <div className="pointer-events-none absolute -bottom-20 -left-20 h-48 w-48 rounded-full bg-pink-500/10 blur-3xl" />
 
               <button
                 onClick={() =>
-                  setSelectedStar(
-                    null
-                  )
+                  setSelectedStar(null)
                 }
                 className="absolute right-5 top-4 text-xl text-white/50 transition hover:text-white"
               >
@@ -1034,30 +964,20 @@ function App() {
 
               <div className="relative">
                 <p className="text-5xl">
-                  {
-                    ico[
-                      selectedStar.category
-                    ]
-                  }
+                  {ico[selectedStar.category]}
                 </p>
 
                 <p className="mt-4 text-sm tracking-[0.25em] text-purple-300">
-                  {
-                    selectedStar.category
-                  }
+                  {selectedStar.category}
                 </p>
 
                 <h2 className="mt-2 text-3xl font-bold text-white">
-                  {
-                    selectedStar.name
-                  }
+                  {selectedStar.name}
                 </h2>
 
                 <div className="mt-6 rounded-2xl border border-purple-300/20 bg-purple-950/40 p-5">
                   <p className="whitespace-pre-wrap leading-7 text-purple-100">
-                    {
-                      selectedStar.message
-                    }
+                    {selectedStar.message}
                   </p>
                 </div>
 
@@ -1071,9 +991,7 @@ function App() {
                 <div className="mt-6 flex gap-3">
                   <button
                     onClick={() =>
-                      editStar(
-                        selectedStar
-                      )
+                      editStar(selectedStar)
                     }
                     className="flex-1 rounded-xl border border-purple-400/30 bg-purple-500/15 py-3 font-semibold text-purple-200 transition hover:bg-purple-500/25"
                   >
@@ -1082,9 +1000,7 @@ function App() {
 
                   <button
                     onClick={() =>
-                      askDeleteStar(
-                        selectedStar.id
-                      )
+                      askDeleteStar(selectedStar.id)
                     }
                     className="flex-1 rounded-xl border border-red-400/20 bg-red-500/10 py-3 font-semibold text-red-200 transition hover:bg-red-500/20"
                   >
@@ -1100,28 +1016,22 @@ function App() {
   }
 
   // ==================================================
-  // DELETE POPUP
+  // DELETE TARGET
   // ==================================================
 
-  const deleteTarget =
-    stars.find(
-      (star) =>
-        star.id === deleteStarId
-    );
+  const deleteTarget = stars.find(
+    (star) => star.id === deleteStarId
+  );
 
   // ==================================================
   // DASHBOARD
   // ==================================================
 
-  if (
-    page === "dashboard" &&
-    session
-  ) {
-    const remaining =
-      Math.max(
-        0,
-        DAILY_LIMIT - todayCount
-      );
+  if (page === "dashboard" && session) {
+    const remaining = Math.max(
+      0,
+      DAILY_LIMIT - todayCount
+    );
 
     return (
       <Shell nav={nav}>
@@ -1133,8 +1043,7 @@ function App() {
           </p>
 
           <h2 className="mt-2 text-4xl font-bold">
-            Welcome,{" "}
-            {displayName} ✨
+            Welcome, {displayName} ✨
           </h2>
 
           <p className="mt-3 max-w-xl text-white/60">
@@ -1153,10 +1062,8 @@ function App() {
                 </p>
 
                 <p className="mt-1 text-sm text-white/60">
-                  You can create up to 3
-                  stars every day.
-                  Unused stars don't carry
-                  over.
+                  You can create up to 3 stars every day.
+                  Unused stars don't carry over.
                 </p>
               </div>
 
@@ -1176,17 +1083,11 @@ function App() {
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <button
-              disabled={
-                todayCount >=
-                DAILY_LIMIT
-              }
-              onClick={
-                openCreatePage
-              }
+              disabled={todayCount >= DAILY_LIMIT}
+              onClick={openCreatePage}
               className="rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-7 py-4 font-semibold shadow-lg shadow-purple-900/30 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {todayCount >=
-              DAILY_LIMIT
+              {todayCount >= DAILY_LIMIT
                 ? "🌌 Daily Limit Reached"
                 : "✨ Create a Star"}
             </button>
@@ -1194,9 +1095,7 @@ function App() {
             <button
               onClick={() => {
                 setFilter("All");
-                setPage(
-                  "viewGalaxy"
-                );
+                setPage("viewGalaxy");
               }}
               className="rounded-full border border-purple-300/30 bg-purple-500/10 px-7 py-4 font-semibold text-purple-200 transition hover:bg-purple-500/20"
             >
@@ -1212,9 +1111,7 @@ function App() {
                 key={cat}
                 onClick={() => {
                   setFilter(cat);
-                  setPage(
-                    "viewGalaxy"
-                  );
+                  setPage("viewGalaxy");
                 }}
                 className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-purple-400/30 hover:bg-purple-500/10"
               >
@@ -1245,16 +1142,11 @@ function App() {
                 Your Stars
               </h3>
 
-              {stars.length >
-                0 && (
+              {stars.length > 0 && (
                 <button
                   onClick={() => {
-                    setFilter(
-                      "All"
-                    );
-                    setPage(
-                      "viewGalaxy"
-                    );
+                    setFilter("All");
+                    setPage("viewGalaxy");
                   }}
                   className="text-sm text-purple-300 hover:text-purple-200"
                 >
@@ -1270,14 +1162,11 @@ function App() {
                 </p>
 
                 <h3 className="mt-4 text-2xl font-semibold">
-                  Your galaxy is
-                  waiting
+                  Your galaxy is waiting
                 </h3>
 
                 <p className="mt-2 text-white/50">
-                  Create your first
-                  star and make your
-                  universe shine.
+                  Create your first star and make your universe shine.
                 </p>
               </div>
             ) : (
@@ -1286,34 +1175,24 @@ function App() {
                   .slice(0, 6)
                   .map((star) => (
                     <article
-                      key={
-                        star.id
-                      }
+                      key={star.id}
                       className="rounded-2xl border border-purple-300/20 bg-white/5 p-5"
                     >
                       <div className="flex justify-between gap-4">
                         <div>
                           <p className="text-2xl">
-                            {
-                              ico[
-                                star.category
-                              ]
-                            }
+                            {ico[star.category]}
                           </p>
 
                           <h3 className="mt-2 text-xl font-bold">
-                            {
-                              star.name
-                            }
+                            {star.name}
                           </h3>
                         </div>
 
                         <div className="flex gap-3">
                           <button
                             onClick={() =>
-                              editStar(
-                                star
-                              )
+                              editStar(star)
                             }
                             className="h-fit text-sm text-purple-300 hover:text-purple-200"
                           >
@@ -1322,9 +1201,7 @@ function App() {
 
                           <button
                             onClick={() =>
-                              askDeleteStar(
-                                star.id
-                              )
+                              askDeleteStar(star.id)
                             }
                             className="h-fit text-sm text-red-300 hover:text-red-200"
                           >
@@ -1334,16 +1211,11 @@ function App() {
                       </div>
 
                       <p className="mt-3 whitespace-pre-wrap text-white/70">
-                        {
-                          star.message
-                        }
+                        {star.message}
                       </p>
 
                       <p className="mt-4 text-xs text-white/40">
-                        {
-                          star.category
-                        }{" "}
-                        ·{" "}
+                        {star.category} ·{" "}
                         {new Date(
                           star.created_at
                         ).toLocaleDateString()}
@@ -1354,9 +1226,7 @@ function App() {
             )}
           </div>
 
-          {error && (
-            <Alert text={error} />
-          )}
+          {error && <Alert text={error} />}
         </main>
 
         {/* DELETE MODAL */}
@@ -1380,36 +1250,25 @@ function App() {
                 {deleteTarget && (
                   <>
                     <p className="mt-2 text-purple-200">
-                      {
-                        ico[
-                          deleteTarget.category
-                        ]
-                      }{" "}
-                      {
-                        deleteTarget.name
-                      }
+                      {ico[deleteTarget.category]}{" "}
+                      {deleteTarget.name}
                     </p>
 
                     <p className="mt-3 line-clamp-3 text-sm text-white/50">
-                      {
-                        deleteTarget.message
-                      }
+                      {deleteTarget.message}
                     </p>
                   </>
                 )}
 
                 <p className="mt-5 text-sm leading-6 text-white/50">
-                  This star will be removed
-                  from your galaxy. You
-                  cannot undo this action.
+                  This star will be removed from your galaxy.
+                  You cannot undo this action.
                 </p>
 
                 <div className="mt-7 flex gap-3">
                   <button
                     onClick={() =>
-                      setDeleteStarId(
-                        null
-                      )
+                      setDeleteStarId(null)
                     }
                     className="flex-1 rounded-xl border border-white/10 bg-white/5 py-3 font-semibold transition hover:bg-white/10"
                   >
@@ -1418,9 +1277,7 @@ function App() {
 
                   <button
                     disabled={busy}
-                    onClick={
-                      confirmDeleteStar
-                    }
+                    onClick={confirmDeleteStar}
                     className="flex-1 rounded-xl border border-red-400/20 bg-red-500/15 py-3 font-semibold text-red-200 transition hover:bg-red-500/25 disabled:opacity-50"
                   >
                     {busy
@@ -1474,16 +1331,12 @@ function App() {
           </h2>
 
           <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-white/70">
-            Turn your dreams, wishes,
-            goals and thoughts into
-            stars in your personal
-            universe.
+            Turn your dreams, wishes, goals and thoughts
+            into stars in your personal universe.
           </p>
 
           <button
-            onClick={() =>
-              auth("signup")
-            }
+            onClick={() => auth("signup")}
             className="mt-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-8 py-4 text-lg font-semibold shadow-lg shadow-purple-500/30 transition hover:scale-105"
           >
             ✨ Create Your Galaxy
@@ -1498,12 +1351,71 @@ function App() {
 // SHELL
 // ==================================================
 
-function Shell({
-  children,
-  nav,
-}) {
+function Shell({ children, nav }) {
   return (
     <div className="min-h-screen overflow-hidden bg-[#07051f] text-white">
+
+      {/* ==================================================
+          ASTRONAUT ANIMATION
+          ================================================== */}
+
+      <style>{`
+        @keyframes astronautFloat {
+          0% {
+            transform:
+              translate(-15vw, 65vh)
+              rotate(-12deg);
+          }
+
+          20% {
+            transform:
+              translate(15vw, 45vh)
+              rotate(8deg);
+          }
+
+          40% {
+            transform:
+              translate(40vw, 25vh)
+              rotate(-6deg);
+          }
+
+          60% {
+            transform:
+              translate(65vw, 42vh)
+              rotate(10deg);
+          }
+
+          80% {
+            transform:
+              translate(85vw, 20vh)
+              rotate(-8deg);
+          }
+
+          100% {
+            transform:
+              translate(115vw, 55vh)
+              rotate(12deg);
+          }
+        }
+
+        .astronaut-float {
+          animation:
+            astronautFloat 28s linear infinite;
+
+          filter:
+            drop-shadow(
+              0 0 8px rgba(255,255,255,0.85)
+            )
+            drop-shadow(
+              0 0 20px rgba(168,85,247,0.65)
+            );
+        }
+      `}</style>
+
+      {/* ==================================================
+          NAVIGATION
+          ================================================== */}
+
       <nav className="relative z-20 flex items-center justify-between px-6 py-6 md:px-8">
         <button
           onClick={() =>
@@ -1518,6 +1430,8 @@ function Shell({
       </nav>
 
       {children}
+
+      {/* VERCEL ANALYTICS */}
 
       <Analytics />
     </div>
