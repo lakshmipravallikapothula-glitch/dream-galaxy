@@ -110,8 +110,6 @@ function App() {
 
       setSession(data.session);
 
-      // If a recovery session already exists,
-      // show the reset password page.
       if (data.session) {
         setPage("dashboard");
       }
@@ -125,9 +123,7 @@ function App() {
       (event, currentSession) => {
         setSession(currentSession);
 
-        // IMPORTANT:
-        // Supabase sends PASSWORD_RECOVERY when
-        // the user clicks the password reset email.
+        // PASSWORD RECOVERY
         if (event === "PASSWORD_RECOVERY") {
           setError("");
           setNotice("");
@@ -143,8 +139,6 @@ function App() {
           setStars([]);
           setTodayCount(0);
 
-          // Don't automatically move away from
-          // forgot/reset pages.
           if (
             page !== "forgotPassword" &&
             page !== "resetPassword"
@@ -317,7 +311,10 @@ function App() {
         setPage("dashboard");
       }
     } catch (err) {
-      setError(err.message);
+      setError(
+        err?.message ||
+          "Unable to complete authentication."
+      );
     } finally {
       setBusy(false);
     }
@@ -346,31 +343,54 @@ function App() {
     setError("");
     setNotice("");
 
-    if (!resetEmail.trim()) {
-      return setError(
+    const cleanEmail = resetEmail.trim();
+
+    if (!cleanEmail) {
+      setError(
         "Please enter your email address."
       );
+      return;
     }
 
     setBusy(true);
 
     try {
-      // This sends the reset email.
-      //
-      // After the user clicks the email link,
-      // Supabase returns to this website.
-      await supabase.auth.resetPasswordForEmail(
-        resetEmail.trim(),
-        {
-          redirectTo: window.location.origin,
+      const {
+        error: resetError,
+      } =
+        await supabase.auth.resetPasswordForEmail(
+          cleanEmail,
+          {
+            redirectTo:
+              window.location.origin,
+          }
+        );
+
+      // IMPORTANT:
+      // Supabase can return an error such as 429
+      // when too many reset requests were made.
+      if (resetError) {
+        const status =
+          resetError.status ||
+          resetError.statusCode;
+
+        if (status === 429) {
+          throw new Error(
+            "Too many password reset requests. Please wait a while and try again."
+          );
         }
-      );
+
+        throw resetError;
+      }
 
       setNotice(
-        "Password reset email sent. Check your inbox and click the reset link."
+        "Password reset email sent. Check your inbox and spam folder, then click the reset link."
       );
     } catch (err) {
-      setError(err.message);
+      setError(
+        err?.message ||
+          "Unable to send the password reset email. Please try again later."
+      );
     } finally {
       setBusy(false);
     }
@@ -413,8 +433,6 @@ function App() {
         throw updateError;
       }
 
-      // Sign out after password change so
-      // the user can test the new password.
       await supabase.auth.signOut();
 
       setResetPassword("");
@@ -433,7 +451,10 @@ function App() {
         "✅ Password updated successfully. You can now sign in with your new password."
       );
     } catch (err) {
-      setError(err.message);
+      setError(
+        err?.message ||
+          "Unable to update your password."
+      );
     } finally {
       setBusy(false);
     }
@@ -482,10 +503,7 @@ function App() {
     setBusy(true);
 
     try {
-      // ----------------------------------------------
       // EDIT EXISTING STAR
-      // ----------------------------------------------
-
       if (editingId) {
         const {
           error: updateError,
@@ -520,11 +538,9 @@ function App() {
         return;
       }
 
-      // ----------------------------------------------
       // DAILY LIMIT
-      // ----------------------------------------------
-
-      const currentToday = getLocalDate();
+      const currentToday =
+        getLocalDate();
 
       const todayStars = stars.filter(
         (star) => {
@@ -554,17 +570,12 @@ function App() {
         todayStars.length >=
         DAILY_LIMIT
       ) {
-        setBusy(false);
-
         return setError(
           "🌌 You have used all 3 stars for today. Come back tomorrow!"
         );
       }
 
-      // ----------------------------------------------
       // CREATE NEW STAR
-      // ----------------------------------------------
-
       const {
         error: insertError,
       } = await supabase
@@ -589,7 +600,10 @@ function App() {
 
       setPage("dashboard");
     } catch (err) {
-      setError(err.message);
+      setError(
+        err?.message ||
+          "Unable to save your star."
+      );
     } finally {
       setBusy(false);
     }
@@ -671,7 +685,10 @@ function App() {
 
       setDeleteStarId(null);
     } catch (err) {
-      setError(err.message);
+      setError(
+        err?.message ||
+          "Unable to delete the star."
+      );
     } finally {
       setBusy(false);
     }
