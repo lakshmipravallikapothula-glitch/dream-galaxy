@@ -68,11 +68,6 @@ function App() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
 
-  // PASSWORD RESET
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetPassword, setResetPassword] = useState("");
-  const [resetConfirm, setResetConfirm] = useState("");
-
   const [starName, setStarName] = useState("");
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("Dream");
@@ -120,31 +115,15 @@ function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      (_event, currentSession) => {
         setSession(currentSession);
-
-        // PASSWORD RECOVERY
-        if (event === "PASSWORD_RECOVERY") {
-          setError("");
-          setNotice("");
-          setResetPassword("");
-          setResetConfirm("");
-          setPage("resetPassword");
-          return;
-        }
 
         if (currentSession) {
           setPage("dashboard");
         } else {
           setStars([]);
           setTodayCount(0);
-
-          if (
-            page !== "forgotPassword" &&
-            page !== "resetPassword"
-          ) {
-            setPage("landing");
-          }
+          setPage("landing");
         }
       }
     );
@@ -206,11 +185,9 @@ function App() {
       const date = new Date(star.created_at);
 
       const year = date.getFullYear();
-
       const month = String(
         date.getMonth() + 1
       ).padStart(2, "0");
-
       const day = String(
         date.getDate()
       ).padStart(2, "0");
@@ -229,14 +206,8 @@ function App() {
 
   function auth(nextMode) {
     setMode(nextMode);
-
     setError("");
     setNotice("");
-
-    setEmail("");
-    setPassword("");
-    setConfirm("");
-
     setPage("auth");
   }
 
@@ -311,150 +282,7 @@ function App() {
         setPage("dashboard");
       }
     } catch (err) {
-      setError(
-        err?.message ||
-          "Unable to complete authentication."
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  // --------------------------------------------------
-  // OPEN FORGOT PASSWORD PAGE
-  // --------------------------------------------------
-
-  function openForgotPassword() {
-    setError("");
-    setNotice("");
-
-    setResetEmail(email || "");
-
-    setPage("forgotPassword");
-  }
-
-  // --------------------------------------------------
-  // SEND PASSWORD RESET EMAIL
-  // --------------------------------------------------
-
-  async function sendResetEmail(e) {
-    e.preventDefault();
-
-    setError("");
-    setNotice("");
-
-    const cleanEmail = resetEmail.trim();
-
-    if (!cleanEmail) {
-      setError(
-        "Please enter your email address."
-      );
-      return;
-    }
-
-    setBusy(true);
-
-    try {
-      const {
-        error: resetError,
-      } =
-        await supabase.auth.resetPasswordForEmail(
-          cleanEmail,
-          {
-            redirectTo:
-              window.location.origin,
-          }
-        );
-
-      // IMPORTANT:
-      // Supabase can return an error such as 429
-      // when too many reset requests were made.
-      if (resetError) {
-        const status =
-          resetError.status ||
-          resetError.statusCode;
-
-        if (status === 429) {
-          throw new Error(
-            "Too many password reset requests. Please wait a while and try again."
-          );
-        }
-
-        throw resetError;
-      }
-
-      setNotice(
-        "Password reset email sent. Check your inbox and spam folder, then click the reset link."
-      );
-    } catch (err) {
-      setError(
-        err?.message ||
-          "Unable to send the password reset email. Please try again later."
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  // --------------------------------------------------
-  // UPDATE PASSWORD
-  // --------------------------------------------------
-
-  async function updatePassword(e) {
-    e.preventDefault();
-
-    setError("");
-    setNotice("");
-
-    if (resetPassword.length < 6) {
-      return setError(
-        "New password must be at least 6 characters."
-      );
-    }
-
-    if (
-      resetPassword !== resetConfirm
-    ) {
-      return setError(
-        "Passwords do not match."
-      );
-    }
-
-    setBusy(true);
-
-    try {
-      const {
-        error: updateError,
-      } = await supabase.auth.updateUser({
-        password: resetPassword,
-      });
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      await supabase.auth.signOut();
-
-      setResetPassword("");
-      setResetConfirm("");
-
-      setEmail(
-        resetEmail.trim()
-      );
-
-      setPassword("");
-
-      setPage("auth");
-      setMode("signin");
-
-      setNotice(
-        "✅ Password updated successfully. You can now sign in with your new password."
-      );
-    } catch (err) {
-      setError(
-        err?.message ||
-          "Unable to update your password."
-      );
+      setError(err.message);
     } finally {
       setBusy(false);
     }
@@ -504,6 +332,7 @@ function App() {
 
     try {
       // EDIT EXISTING STAR
+
       if (editingId) {
         const {
           error: updateError,
@@ -539,8 +368,8 @@ function App() {
       }
 
       // DAILY LIMIT
-      const currentToday =
-        getLocalDate();
+
+      const currentToday = getLocalDate();
 
       const todayStars = stars.filter(
         (star) => {
@@ -570,12 +399,15 @@ function App() {
         todayStars.length >=
         DAILY_LIMIT
       ) {
+        setBusy(false);
+
         return setError(
           "🌌 You have used all 3 stars for today. Come back tomorrow!"
         );
       }
 
       // CREATE NEW STAR
+
       const {
         error: insertError,
       } = await supabase
@@ -600,10 +432,7 @@ function App() {
 
       setPage("dashboard");
     } catch (err) {
-      setError(
-        err?.message ||
-          "Unable to save your star."
-      );
+      setError(err.message);
     } finally {
       setBusy(false);
     }
@@ -685,10 +514,7 @@ function App() {
 
       setDeleteStarId(null);
     } catch (err) {
-      setError(
-        err?.message ||
-          "Unable to delete the star."
-      );
+      setError(err.message);
     } finally {
       setBusy(false);
     }
@@ -736,7 +562,7 @@ function App() {
     "Stargazer";
 
   // --------------------------------------------------
-  // NAV
+  // NAVIGATION
   // --------------------------------------------------
 
   const nav = session ? (
@@ -794,8 +620,8 @@ function App() {
 
             <p className="mt-2 text-white/60">
               {mode === "signup"
-                ? "Start your own universe of stars."
-                : "Sign in to continue to your galaxy."}
+                ? "Start your own universe with To the Stars."
+                : "Sign in to continue to To the Stars."}
             </p>
 
             {mode === "signup" && (
@@ -833,20 +659,6 @@ function App() {
               />
             )}
 
-            {mode === "signin" && (
-              <div className="mt-3 text-right">
-                <button
-                  type="button"
-                  onClick={
-                    openForgotPassword
-                  }
-                  className="text-sm font-semibold text-purple-300 transition hover:text-purple-200"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-            )}
-
             {error && (
               <Alert text={error} />
             )}
@@ -871,7 +683,7 @@ function App() {
             <p className="mt-5 text-center text-sm text-white/60">
               {mode === "signup"
                 ? "Already have an account?"
-                : "New to Dream Galaxy?"}{" "}
+                : "New to To the Stars?"}{" "}
 
               <button
                 type="button"
@@ -892,145 +704,6 @@ function App() {
                   : "Create Account"}
               </button>
             </p>
-          </form>
-        </main>
-      </Shell>
-    );
-  }
-
-  // ==================================================
-  // FORGOT PASSWORD PAGE
-  // ==================================================
-
-  if (page === "forgotPassword") {
-    return (
-      <Shell nav={nav}>
-        <main className="flex min-h-[calc(100vh-88px)] items-center justify-center px-5">
-          <form
-            onSubmit={sendResetEmail}
-            className="w-full max-w-md rounded-3xl border border-purple-300/20 bg-[#17103b]/90 p-8 shadow-2xl shadow-purple-900/40"
-          >
-            <button
-              type="button"
-              onClick={() =>
-                auth("signin")
-              }
-              className="text-sm text-purple-300 transition hover:text-purple-200"
-            >
-              ← Back to Sign In
-            </button>
-
-            <p className="mt-6 text-4xl">
-              🔑
-            </p>
-
-            <h2 className="mt-3 text-3xl font-bold">
-              Reset your password
-            </h2>
-
-            <p className="mt-2 text-white/60">
-              Enter your email and we'll
-              send you a link to create a
-              new password.
-            </p>
-
-            <Field
-              label="Email"
-              value={resetEmail}
-              set={setResetEmail}
-              type="email"
-              placeholder="you@example.com"
-            />
-
-            {error && (
-              <Alert text={error} />
-            )}
-
-            {notice && (
-              <p className="mt-4 rounded-xl border border-green-400/20 bg-green-500/10 p-3 text-sm leading-6 text-green-200">
-                {notice}
-              </p>
-            )}
-
-            <button
-              disabled={busy}
-              className="mt-6 w-full rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 py-3 font-semibold disabled:opacity-50"
-            >
-              {busy
-                ? "Sending..."
-                : "📧 Send Reset Email"}
-            </button>
-
-            <p className="mt-5 text-center text-xs leading-5 text-white/40">
-              Check your inbox and spam
-              folder if you don't see the
-              email.
-            </p>
-          </form>
-        </main>
-      </Shell>
-    );
-  }
-
-  // ==================================================
-  // RESET PASSWORD PAGE
-  // ==================================================
-
-  if (page === "resetPassword") {
-    return (
-      <Shell nav={nav}>
-        <main className="flex min-h-[calc(100vh-88px)] items-center justify-center px-5">
-          <form
-            onSubmit={updatePassword}
-            className="w-full max-w-md rounded-3xl border border-purple-300/20 bg-[#17103b]/90 p-8 shadow-2xl shadow-purple-900/40"
-          >
-            <p className="text-4xl">
-              🔐
-            </p>
-
-            <h2 className="mt-3 text-3xl font-bold">
-              Create a new password
-            </h2>
-
-            <p className="mt-2 text-white/60">
-              Choose a new password for
-              your Dream Galaxy account.
-            </p>
-
-            <Field
-              label="New password"
-              value={resetPassword}
-              set={setResetPassword}
-              type="password"
-              placeholder="At least 6 characters"
-            />
-
-            <Field
-              label="Confirm new password"
-              value={resetConfirm}
-              set={setResetConfirm}
-              type="password"
-              placeholder="Repeat your new password"
-            />
-
-            {error && (
-              <Alert text={error} />
-            )}
-
-            {notice && (
-              <p className="mt-4 rounded-xl border border-green-400/20 bg-green-500/10 p-3 text-sm text-green-200">
-                {notice}
-              </p>
-            )}
-
-            <button
-              disabled={busy}
-              className="mt-6 w-full rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 py-3 font-semibold disabled:opacity-50"
-            >
-              {busy
-                ? "Updating..."
-                : "🔐 Update Password"}
-            </button>
           </form>
         </main>
       </Shell>
@@ -1077,8 +750,8 @@ function App() {
 
             <p className="mt-2 text-white/60">
               {editingId
-                ? "Update your star and keep your universe current."
-                : "Give your dream a place in the universe."}
+                ? "Update your star and keep your To the Stars universe current."
+                : "Give your dream a place among the stars."}
             </p>
 
             {!editingId && (
@@ -1166,7 +839,7 @@ function App() {
                   : todayCount >=
                     DAILY_LIMIT
                   ? "🌌 Come Back Tomorrow"
-                  : "✨ Send to My Galaxy"}
+                  : "✨ Send to My Stars"}
               </button>
             </form>
           </section>
@@ -1197,7 +870,11 @@ function App() {
             </button>
 
             <div className="relative h-[650px] overflow-hidden rounded-[2rem] border border-purple-300/20 bg-[#08052a] shadow-2xl shadow-purple-950/50">
+              {/* CENTER GLOW */}
+
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(130,80,255,0.22),transparent_62%)]" />
+
+              {/* PURPLE NEBULA */}
 
               <div className="pointer-events-none absolute left-[20%] top-[20%] h-64 w-64 rounded-full bg-purple-600/10 blur-3xl" />
 
@@ -1217,8 +894,30 @@ function App() {
 
               {/* MOVING ASTRONAUT */}
 
-              <div className="pointer-events-none absolute z-10 animate-[floatAcross_18s_linear_infinite] text-5xl drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
+              <div className="pointer-events-none absolute z-10 animate-[floatAcross_18s_linear_infinite] text-5xl drop-shadow-[0_0_12px_rgba(255,255,255,0.8)]">
                 👨‍🚀
+              </div>
+
+              {/* SMALL SPACE STARS */}
+
+              <div className="pointer-events-none absolute left-[18%] top-[12%] animate-pulse text-xl">
+                ✦
+              </div>
+
+              <div className="pointer-events-none absolute left-[42%] top-[18%] animate-pulse text-sm">
+                ✧
+              </div>
+
+              <div className="pointer-events-none absolute right-[28%] top-[35%] animate-pulse text-xl">
+                ✦
+              </div>
+
+              <div className="pointer-events-none absolute bottom-[28%] left-[35%] animate-pulse text-sm">
+                ✧
+              </div>
+
+              <div className="pointer-events-none absolute right-[10%] bottom-[22%] animate-pulse text-lg">
+                ✦
               </div>
 
               {/* CATEGORY FILTERS */}
@@ -1303,7 +1002,7 @@ function App() {
 
                     <p className="mt-2 text-white/50">
                       Create a star and
-                      watch your galaxy
+                      watch your universe
                       grow.
                     </p>
                   </div>
@@ -1314,7 +1013,7 @@ function App() {
 
               <div className="absolute bottom-6 left-6 z-20">
                 <p className="text-sm tracking-[0.3em] text-purple-300">
-                  MY GALAXY
+                  TO THE STARS
                 </p>
 
                 <p className="mt-1 text-white/40">
@@ -1417,7 +1116,7 @@ function App() {
   }
 
   // ==================================================
-  // DELETE POPUP TARGET
+  // DELETE TARGET
   // ==================================================
 
   const deleteTarget =
@@ -1455,7 +1154,7 @@ function App() {
           <p className="mt-3 max-w-xl text-white/60">
             Your dreams, wishes, goals,
             and thoughts belong safely
-            in your galaxy.
+            in your To the Stars universe.
           </p>
 
           {/* DAILY LIMIT */}
@@ -1515,7 +1214,7 @@ function App() {
               }}
               className="rounded-full border border-purple-300/30 bg-purple-500/10 px-7 py-4 font-semibold text-purple-200 transition hover:bg-purple-500/20"
             >
-              🌌 View My Galaxy
+              🌌 View My Stars
             </button>
           </div>
 
@@ -1573,7 +1272,7 @@ function App() {
                   }}
                   className="text-sm text-purple-300 hover:text-purple-200"
                 >
-                  View Galaxy →
+                  View Stars →
                 </button>
               )}
             </div>
@@ -1585,7 +1284,7 @@ function App() {
                 </p>
 
                 <h3 className="mt-4 text-2xl font-semibold">
-                  Your galaxy is
+                  Your universe is
                   waiting
                 </h3>
 
@@ -1715,7 +1414,7 @@ function App() {
 
                 <p className="mt-5 text-sm leading-6 text-white/50">
                   This star will be removed
-                  from your galaxy. You
+                  from your universe. You
                   cannot undo this action.
                 </p>
 
@@ -1758,12 +1457,22 @@ function App() {
   return (
     <Shell nav={nav}>
       <main className="relative flex min-h-[calc(100vh-88px)] items-center justify-center overflow-hidden px-6 text-center">
+        {/* DECORATIVE STARS */}
+
         <span className="absolute left-[12%] top-[16%] animate-pulse text-3xl">
           ✨
         </span>
 
         <span className="absolute right-[15%] top-[25%] animate-pulse text-2xl">
           🌟
+        </span>
+
+        <span className="absolute left-[28%] top-[65%] animate-pulse text-xl">
+          ✦
+        </span>
+
+        <span className="absolute right-[30%] bottom-[18%] animate-pulse text-lg">
+          ✧
         </span>
 
         <span className="absolute bottom-[15%] left-[10%] text-7xl">
@@ -1774,23 +1483,22 @@ function App() {
           🌙
         </span>
 
-        {/* MOVING ASTRONAUT */}
+        {/* FLOATING ASTRONAUT */}
 
-        <div className="pointer-events-none absolute left-0 top-[25%] text-5xl animate-[floatAcrossLanding_20s_linear_infinite] drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]">
+        <div className="pointer-events-none absolute left-0 top-[30%] z-10 animate-[floatAcrossLanding_20s_linear_infinite] text-6xl drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]">
           👨‍🚀
         </div>
 
-        <section className="relative z-10 max-w-3xl">
+        <section className="relative z-20 max-w-3xl">
           <p className="text-sm tracking-[0.35em] text-purple-300">
             YOUR LITTLE UNIVERSE AWAITS
           </p>
 
           <h2 className="mt-5 text-5xl font-bold leading-tight md:text-7xl">
-            Every dream
+            Take your dreams
             <br />
-            deserves a{" "}
             <span className="text-purple-400">
-              little star.
+              To the Stars.
             </span>
           </h2>
 
@@ -1807,8 +1515,12 @@ function App() {
             }
             className="mt-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 px-8 py-4 text-lg font-semibold shadow-lg shadow-purple-500/30 transition hover:scale-105"
           >
-            ✨ Create Your Galaxy
+            ✨ Begin Your Journey
           </button>
+
+          <p className="mt-5 text-sm text-white/40">
+            🌌 Dream · 💖 Wish · 🎯 Goal · 💭 Thought
+          </p>
         </section>
       </main>
     </Shell>
@@ -1825,54 +1537,6 @@ function Shell({
 }) {
   return (
     <div className="min-h-screen overflow-hidden bg-[#07051f] text-white">
-      <style>
-        {`
-          @keyframes floatAcross {
-            0% {
-              transform: translateX(-80px) translateY(0) rotate(-8deg);
-            }
-
-            25% {
-              transform: translateX(25vw) translateY(-30px) rotate(8deg);
-            }
-
-            50% {
-              transform: translateX(50vw) translateY(20px) rotate(-5deg);
-            }
-
-            75% {
-              transform: translateX(75vw) translateY(-25px) rotate(7deg);
-            }
-
-            100% {
-              transform: translateX(calc(100vw + 80px)) translateY(0) rotate(-8deg);
-            }
-          }
-
-          @keyframes floatAcrossLanding {
-            0% {
-              transform: translateX(-100px) translateY(0) rotate(-10deg);
-            }
-
-            25% {
-              transform: translateX(25vw) translateY(-35px) rotate(10deg);
-            }
-
-            50% {
-              transform: translateX(50vw) translateY(25px) rotate(-8deg);
-            }
-
-            75% {
-              transform: translateX(75vw) translateY(-20px) rotate(8deg);
-            }
-
-            100% {
-              transform: translateX(calc(100vw + 100px)) translateY(0) rotate(-10deg);
-            }
-          }
-        `}
-      </style>
-
       <nav className="relative z-20 flex items-center justify-between px-6 py-6 md:px-8">
         <button
           onClick={() =>
@@ -1880,7 +1544,7 @@ function Shell({
           }
           className="text-xl font-bold transition hover:text-purple-300 md:text-2xl"
         >
-          🌌 Dream Galaxy
+          🌌 To the Stars
         </button>
 
         {nav}
@@ -1933,5 +1597,85 @@ function Alert({ text }) {
     </p>
   );
 }
+
+// ==================================================
+// GLOBAL ANIMATIONS
+// ==================================================
+
+const style = document.createElement("style");
+
+style.innerHTML = `
+@keyframes floatAcross {
+  0% {
+    left: -8%;
+    top: 42%;
+    transform: rotate(-8deg);
+  }
+
+  25% {
+    left: 25%;
+    top: 30%;
+    transform: rotate(8deg);
+  }
+
+  50% {
+    left: 52%;
+    top: 45%;
+    transform: rotate(-5deg);
+  }
+
+  75% {
+    left: 75%;
+    top: 25%;
+    transform: rotate(10deg);
+  }
+
+  100% {
+    left: 108%;
+    top: 40%;
+    transform: rotate(-8deg);
+  }
+}
+
+@keyframes floatAcrossLanding {
+  0% {
+    left: -10%;
+    top: 30%;
+    transform: rotate(-10deg);
+  }
+
+  25% {
+    left: 25%;
+    top: 20%;
+    transform: rotate(8deg);
+  }
+
+  50% {
+    left: 50%;
+    top: 35%;
+    transform: rotate(-6deg);
+  }
+
+  75% {
+    left: 75%;
+    top: 22%;
+    transform: rotate(10deg);
+  }
+
+  100% {
+    left: 110%;
+    top: 32%;
+    transform: rotate(-8deg);
+  }
+}
+`;
+
+if (!document.head.contains(style)) {
+  document.head.appendChild(style);
+}
+
+// ==================================================
+// EXPORT
+// ==================================================
 
 export default App;
